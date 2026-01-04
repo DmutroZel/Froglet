@@ -60,8 +60,19 @@ app.get('/health', (req, res) => {
 
 app.get(`/frog-advice`, async(req , res) => {
   const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  headless: 'new',
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-software-rasterizer',
+    '--no-first-run',
+    '--no-zygote',
+    '--single-process'
+  ]
 });
   const page = await browser.newPage();
    const randomIndex = Math.floor(Math.random() * sitesBase.length);
@@ -111,9 +122,20 @@ app.get(`/frog-advice`, async(req , res) => {
 
 
 app.get('/your-kind-of-frog', async(req,res) => {
-  const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+ const browser = await puppeteer.launch({
+  headless: 'new',
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-software-rasterizer',
+    '--no-first-run',
+    '--no-zygote',
+    '--single-process'
+  ]
 });
   const page = await browser.newPage();
   await page.goto('https://californiaherps.com/allfrogs2.html');
@@ -155,8 +177,19 @@ app.get('/your-kind-of-frog', async(req,res) => {
 
 app.get('/frog-image', async(req, res) => {
  const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  headless: 'new',
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-software-rasterizer',
+    '--no-first-run',
+    '--no-zygote',
+    '--single-process'
+  ]
 });
 
   const page = await browser.newPage();
