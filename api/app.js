@@ -58,51 +58,63 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Froglet API is running! 🐸' });
 });
 
-app.get(`/frog-advice`, async(req , res) => {
-  const browser = await puppeteer.launch({
-  headless: 'new',
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--disable-extensions',
-    '--disable-software-rasterizer',
-    '--no-first-run',
-    '--no-zygote',
-    '--single-process'
-  ]
-});
-  const page = await browser.newPage();
-   const randomIndex = Math.floor(Math.random() * sitesBase.length);
-  await page.goto(sitesBase[randomIndex]);
-   const paragraphs = await page.$$('li'); 
+app.get('/frog-advice', async (req, res) => {
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: 'new',
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-extensions',
+        '--no-zygote',
+        '--single-process', // на Render free це часто потрібно
+      ],
+    });
 
-  if (paragraphs.length > 0) {
-    let verif = false;
-    const re = /(?<![А-Яа-яЇїІіЄєҐґA-Za-z])(?:жаба|жаби|жабі|жабу|жабою|жабам|жабами|жабах|жабо|жаб)(?![А-Яа-яЇїІіЄєҐґA-Za-z])/iu;
-    do{
-      const randomIndex = Math.floor(Math.random() * paragraphs.length);
-      const randomParagraph = paragraphs[randomIndex];
-      const text = await page.evaluate(el => el.textContent, randomParagraph);
-      console.log('Random paragraph text:', text);
-      if(re.test(text)){
-        verif = text
-        res.json({message:verif});
-        await browser.close();
-        
-      } else {
-        console.log(false)
-        verif=false;
-      }
+    const page = await browser.newPage();
+    const randomIndex = Math.floor(Math.random() * sitesBase.length);
+    await page.goto(sitesBase[randomIndex], { waitUntil: 'networkidle2', timeout: 30000 });
 
+    const paragraphs = await page.$$('li');
 
-    } while(verif==false)
-
-  
+    if (paragraphs.length === 0) {
+      return res.status(500).json({ message: 'Не знайдено елементів на сторінці' });
     }
 
+    // Зберемо всі тексти, що містять "жаба"
+    const validTexts = [];
+    const re = /(?<![А-Яа-яЇїІіЄєҐґA-Za-z])(?:жаба|жаби|жабі|жабу|жабою|жабам|жабами|жабах|жабо|жаб)(?![А-Яа-яЇїІіЄєҐґA-Za-z])/iu;
+
+    for (const p of paragraphs) {
+      const text = await page.evaluate(el => el.textContent.trim(), p);
+      if (re.test(text)) {
+        validTexts.push(text);
+      }
+    }
+
+    await browser.close();
+
+    if (validTexts.length > 0) {
+      const randomFact = validTexts[Math.floor(Math.random() * validTexts.length)];
+      res.json({ message: randomFact });
+    } else {
+      // Якщо нічого не знайшли — повертаємо fallback або випадковий текст
+      const fallbackTexts = [
+        'Жаби можуть дихати через шкіру.',
+        'Деякі жаби можуть змінювати колір залежно від температури.',
+        'Жаби — важлива частина екосистеми!'
+      ];
+      res.json({ message: fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)] });
+    }
+
+  } catch (error) {
+    console.error('Error in /frog-advice:', error);
+    if (browser) await browser.close();
+    res.status(500).json({ message: 'Помилка при завантаженні факту про жабу' });
+  }
 });
 /**
  * @openapi
