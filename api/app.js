@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://froglet.vercel.app', // ⚠️ Замініть на ваш домен Vercel
+    'https://froglet-six.vercel.app/', 
     'https://froglet-*.vercel.app' 
   ],
   credentials: true
